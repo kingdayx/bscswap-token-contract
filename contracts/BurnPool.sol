@@ -11,16 +11,6 @@ import "./StakePool.sol";
  * Forked from https://github.com/milk-protocol/stakecow-contracts-bsc/blob/master/contracts/FomoCow.sol
  */
 
- // SPDX-License-Identifier: MIT
-
- pragma solidity ^0.6.12;
-
- /**
-  * @dev https://bscswap.com
-  * DEGEN will be halved at each period.
-  * Forked from https://github.com/milk-protocol/stakecow-contracts-bsc/blob/master/contracts/FomoCow.sol
-  */
-
  contract BurnPool is StakePool {
      IERC20 public degenToken;
 
