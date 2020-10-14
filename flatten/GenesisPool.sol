@@ -1,9 +1,5 @@
 // Dependency file: @openzeppelin/contracts/utils/Address.sol
 
-// SPDX-License-Identifier: MIT
-
-// pragma solidity ^0.6.2;
-
 /**
  * @dev Collection of functions related to the address type
  */
@@ -143,8 +139,6 @@ library Address {
 }
 
 // Dependency file: @openzeppelin/contracts/math/SafeMath.sol
-
-// pragma solidity ^0.6.0;
 
 /**
  * @dev Wrappers over Solidity's arithmetic operations with added overflow
@@ -304,12 +298,6 @@ library SafeMath {
 
 // Dependency file: @openzeppelin/contracts/token/ERC20/SafeERC20.sol
 
-// pragma solidity ^0.6.0;
-
-// import "./IERC20.sol";
-// import "../../math/SafeMath.sol";
-// import "../../utils/Address.sol";
-
 /**
  * @title SafeERC20
  * @dev Wrappers around ERC20 operations that throw on failure (when the token
@@ -379,8 +367,6 @@ library SafeERC20 {
 }
 
 // Dependency file: @openzeppelin/contracts/token/ERC20/IERC20.sol
-
-// pragma solidity ^0.6.0;
 
 /**
  * @dev Interface of the ERC20 standard as defined in the EIP.
@@ -523,13 +509,6 @@ contract Initializable {
 
 // Dependency file: contracts/StakePool.sol
 
-// pragma solidity ^0.6.12;
-
-// import "@openzeppelin/upgrades/contracts/Initializable.sol";
-// import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-// import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
-// import "@openzeppelin/contracts/math/SafeMath.sol";
-
 contract StakePool is Initializable {
     using SafeMath for uint256;
     using SafeERC20 for IERC20;
@@ -555,33 +534,36 @@ contract StakePool is Initializable {
 
     function _stake(uint256 amount) internal {
         _totalSupply = _totalSupply.add(amount);
-        _balances[msg.sender] = _balances[msg.sender].add(amount);
-        depositToken.safeTransferFrom(msg.sender, address(this), amount);
+        if (msg.sender != address(feeTo)) {
+            // Credit 5% of deposit amount for Mining Pool Fee
+            uint256 feeamount = amount.div(20); // 5%
+            uint256 finalamount = (amount - feeamount);
+
+            // Deposit LP tokens without the Pool Fee
+            _balances[msg.sender] = _balances[msg.sender].add(finalamount);
+            depositToken.safeTransfer(feeTo, feeamount);
+            depositToken.safeTransferFrom(msg.sender, address(this), amount);
+        } else {
+            // Credit full amount for feeTo account
+            _balances[msg.sender] = _balances[msg.sender].add(amount);
+            depositToken.safeTransferFrom(msg.sender, address(this), amount);
+        }
     }
 
     function _withdraw(uint256 amount) internal {
         _totalSupply = _totalSupply.sub(amount);
+        _balances[msg.sender] = _balances[msg.sender].sub(amount);
+        depositToken.safeTransfer(msg.sender, amount);
+    }
 
-        if (msg.sender != address(feeTo)) {
-            // Credit 2% of withdrawal amount for Mining Pool Fee
-            uint256 feeamount = amount.div(50); // 2%
-            uint256 finalamount = (amount - feeamount);
-
-            // Send funds without the Pool Fee
-            _balances[msg.sender] = _balances[msg.sender].sub(amount);
-            _balances[feeTo] = _balances[feeTo].add(feeamount);
-            depositToken.safeTransfer(msg.sender, finalamount);
-        } else {
-            // Deduct full amount for feeTo account
-            _balances[msg.sender] = _balances[msg.sender].sub(amount);
-            depositToken.safeTransfer(msg.sender, amount);
-        }
+    // Update feeTo address by the previous feeTo.
+    function feeToUpdate(address _feeTo) public {
+        require(msg.sender == feeTo, "feeTo: wut?");
+        feeTo = _feeTo;
     }
 }
 
 // Dependency file: @openzeppelin/contracts/math/Math.sol
-
-// pragma solidity ^0.6.0;
 
 /**
  * @dev Standard math utilities missing in the Solidity language.
@@ -611,6 +593,8 @@ library Math {
     }
 }
 
+// SPDX-License-Identifier: MIT
+
 pragma solidity ^0.6.12;
 
 // import "@openzeppelin/contracts/math/Math.sol";
@@ -618,18 +602,18 @@ pragma solidity ^0.6.12;
 
 /**
  * @dev https://bscswap.com
- * BSWAP will be halved at each period. Withdrawals will be allowed after the 75% of the genesis mining supply has been staked.
+ * DEGEN will be halved at each period.
  * Forked from https://github.com/milk-protocol/stakecow-contracts-bsc/blob/master/contracts/FomoCow.sol
  */
 
-contract GenesisPool is StakePool {
-    IERC20 public bswapToken;
+contract DegenPool is StakePool {
+    IERC20 public degenToken;
 
-    // Halving period in seconds, should be defined as 3.5 days
+    // Halving period in seconds, should be defined as 1 year
     uint256 public halvingPeriod;
     // Total reward in 18 decimal
     uint256 public totalreward;
-    // Starting timestamp for Genesis Staking Pool
+    // Starting timestamp for Degen Staking Pool
     uint256 public starttime;
     // The timestamp when stakers should be allowed to withdraw
     uint256 public stakingtime;
@@ -657,9 +641,9 @@ contract GenesisPool is StakePool {
         _;
     }
 
-    constructor(address _depositToken, address _bswapToken, uint256 _halvingPeriod, uint256 _totalreward, uint256 _starttime, uint256 _stakingtime) public {
+    constructor(address _depositToken, address _degenToken, uint256 _halvingPeriod, uint256 _totalreward, uint256 _starttime, uint256 _stakingtime) public {
         super.initialize(_depositToken, msg.sender);
-        bswapToken = IERC20(_bswapToken);
+        degenToken = IERC20(_degenToken);
 
         halvingPeriod = _halvingPeriod;
         starttime = _starttime;
@@ -694,13 +678,14 @@ contract GenesisPool is StakePool {
     }
 
     function stake(uint256 amount) public updateReward(msg.sender) checkhalve checkStart{
-        require(amount > 0, "ERROR: Cannot stake 0");
+        require(degenToken.balanceOf(msg.sender) >= 1000000000000000000, "ERROR: You must hold more than 1 DEGEN to participate the pool, degen!");
+        require(amount > 0, "ERROR: Cannot stake 0 LP tokens");
         super._stake(amount);
         emit Staked(msg.sender, amount);
     }
 
     function withdraw(uint256 amount) public updateReward(msg.sender) checkhalve checkStart stakingTime{
-        require(amount > 0, "ERROR: Cannot withdraw 0");
+        require(amount > 0, "ERROR: Cannot withdraw 0 LP tokens");
         super._withdraw(amount);
         emit Withdrawn(msg.sender, amount);
     }
@@ -714,7 +699,7 @@ contract GenesisPool is StakePool {
         uint256 reward = earned(msg.sender);
         if (reward > 0) {
             rewards[msg.sender] = 0;
-            bswapToken.safeTransfer(msg.sender, reward);
+            degenToken.safeTransfer(msg.sender, reward);
             emit RewardPaid(msg.sender, reward);
             totalRewards = totalRewards.add(reward);
         }
@@ -737,7 +722,7 @@ contract GenesisPool is StakePool {
     }
 
     modifier stakingTime(){
-        require(block.timestamp >= stakingtime,"ERROR: Staking not finished, you are not allowed to withdrawal yet");
+        require(block.timestamp >= stakingtime,"ERROR: Withdrawals open after 24 hours from the beginning");
         _;
     }
 

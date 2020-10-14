@@ -9,7 +9,7 @@ https://github.com/hyunsikswap/bscswap-token-contract/blob/master/contracts/BSWA
 
 https://github.com/hyunsikswap/bscswap-token-contract/blob/master/flatten/BSWAP.sol ( full code with imported libraries from audited @openzeppelin contracts )
 
-https://testnet.bscscan.com/address/0xfbfedb6341aef953a99ca4461ce0d1592a4a1dd6#code (Deployed on Testnet)
+https://bscscan.com/address/0xacc234978a5eb941665fd051ca48765610d82584#code (Deployed on Mainnet)
 
 There is no powerful function for the contract deployer as well as assigning `minter`, or assigning accounts for `blacklist` , etc.
 
@@ -19,23 +19,19 @@ Also, new `ERC20Burnable.sol` library from openzeppelin is being used to burn to
 
 So better use the burn function rather than sending tokens to the famous [burn address](https://bscscan.com/address/0x000000000000000000000000000000000000dEaD).
 
-### Genesis Mining Contract
+### BurnPool Mining Contract
 
-The code of Genesis Mining (Yield Farming) contract lives here.
+The code of BurnPool (Yield Farming) contract lives here.
 
-https://github.com/hyunsikswap/bscswap-token-contract/blob/master/contracts/GenesisPool.sol
+https://github.com/hyunsikswap/bscswap-token-contract/blob/master/contracts/BurnPool.sol
 
 https://github.com/hyunsikswap/bscswap-token-contract/blob/master/contracts/StakePool.sol
 
-https://github.com/hyunsikswap/bscswap-token-contract/blob/master/flatten/GenesisPool.sol ( full code with imported libraries from audited @openzeppelin contracts )
+https://github.com/hyunsikswap/bscswap-token-contract/blob/master/flatten/BurnPool.sol ( full code with imported libraries from audited @openzeppelin contracts )
 
-https://testnet.bscscan.com/address/0x2e561310f18ebb4546a8175c006399809af66983#code (Deployed on Testnet with the values from https://docs.google.com/spreadsheets/d/1032MPlR_clsxp6zxtA3v2cU99r360TXjXSctv5GeZng/edit#gid=1350965761 Genesis Mining Tab)
+https://bscscan.com/address/0x65baa9ffb3c88a3ef8beef1b65ccaaaa89cb85a4#code (Deployed on Mainnet)
 
 The contract is originally forked from https://github.com/cryptoghoulz/based-contracts/blob/master/contracts/v5/Pool1.sol and https://github.com/milk-protocol/stakecow-contracts-bsc/blob/master/contracts/FomoCow.sol
-
-### BSCswap LP token staking contract
-
-We will use the same code from https://github.com/sushiswap/sushiswap without the `migration` function that the sushi used for migrating Uniswap LP tokens to SushiSwap LP tokens.
 
 ### BSCswap Main contracts
 

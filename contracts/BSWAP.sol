@@ -6,11 +6,11 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/utils/Address.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20Burnable.sol";
 
-// BSCswap with Governance.
+// BSCswap Governance Token
 contract BSCswap is ERC20, ERC20Burnable {
     constructor() public ERC20("BSCswap", "BSWAP") {
         // Mint the total supply of the token to the deployer of the contract
-        _mint(msg.sender, 3040912000000000000000000);
+        _mint(msg.sender, 100000000000000000000000);
     }
     // Copied and modified from YAM code:
     // https://github.com/yam-finance/yam-protocol/blob/master/contracts/token/YAMGovernanceStorage.sol
